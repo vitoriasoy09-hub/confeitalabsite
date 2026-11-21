@@ -1,0 +1,222 @@
+{
+ "config": {
+  "whatsapp": "5588997909618",
+  "instagram": "confeitalab3d"
+ },
+ "categorias": [
+  {
+   "id": "ejetores",
+   "nome": "Ejetores",
+   "desc": "Para brigadeiros e pasta americana, com relevo delicado.",
+   "cor": "#FCE4E7",
+   "ilus": "ejetor",
+   "img": ""
+  },
+  {
+   "id": "realistas",
+   "nome": "Ejetores Realistas",
+   "desc": "Frutas, flores e formas com acabamento super realista.",
+   "cor": "#E3F4F0",
+   "ilus": "realista",
+   "img": ""
+  },
+  {
+   "id": "carimbos",
+   "nome": "Carimbos",
+   "desc": "Sua logo ou frase marcada em brigadeiros de 15g a 22g.",
+   "cor": "#FBEBDD",
+   "ilus": "carimbo",
+   "img": ""
+  },
+  {
+   "id": "cortadores",
+   "nome": "Cortadores",
+   "desc": "Para biscoitos e pasta americana, em qualquer formato.",
+   "cor": "#FCE4E7",
+   "ilus": "cortador",
+   "img": ""
+  },
+  {
+   "id": "rolinhos",
+   "nome": "Rolinhos de Textura",
+   "desc": "Texturas lindas para pasta americana e biscoitos.",
+   "cor": "#E3F4F0",
+   "ilus": "rolinho",
+   "img": ""
+  }
+ ],
+ "produtos": [
+  {
+   "id": "p0",
+   "cat": "realistas",
+   "nome": "Molde ejetor 3D - Virgem Maria",
+   "desc": "ideal para brigadeiros de 15-20g\n3,5x3,5x3cm",
+   "preco": "14,00",
+   "tag": "especial Natal 2026",
+   "img": "img/produtos/p0-1.webp",
+   "fest": [
+    "Natal"
+   ]
+  },
+  {
+   "id": "p1",
+   "cat": "realistas",
+   "nome": "Ejetor 3D Anjo",
+   "desc": "Mais definição e qualidade nas suas produções🧁💖\nDimensão do produto aprox. 3,5x3,5x3cm📏\nConsultar disponibilidade de cor.",
+   "preco": "14,00",
+   "tag": "especial Natal 2026",
+   "img": "img/produtos/p1-1.webp",
+   "fest": [
+    "Natal"
+   ]
+  },
+  {
+   "id": "p2",
+   "cat": "realistas",
+   "nome": "Ejetor 3D menino Jesus na manjedoura",
+   "desc": "Mais definição e qualidade nas suas produções🧁💖\nDimensão do produto aprox. 3,5x3,5x3cm📏\nConsultar disponibilidade de cor.",
+   "preco": "14,00",
+   "tag": "Personalizado",
+   "img": "img/produtos/p2-1.webp",
+   "fest": [
+    "Natal"
+   ],
+   "img2": "img/produtos/p2-2.webp"
+  },
+  {
+   "id": "p3",
+   "cat": "realistas",
+   "nome": "Ejetor Realista Morango",
+   "desc": "Morango com textura de sementinhas.",
+   "preco": "",
+   "tag": "",
+   "img": "",
+   "fest": []
+  },
+  {
+   "id": "p4",
+   "cat": "realistas",
+   "nome": "Ejetor Realista Rosa",
+   "desc": "Rosa com pétalas detalhadas.",
+   "preco": "",
+   "tag": "",
+   "img": "",
+   "fest": []
+  },
+  {
+   "id": "p5",
+   "cat": "realistas",
+   "nome": "Ejetor Realista Concha",
+   "desc": "Concha do mar para festas temáticas.",
+   "preco": "",
+   "tag": "",
+   "img": "",
+   "fest": []
+  },
+  {
+   "id": "p6",
+   "cat": "carimbos",
+   "nome": "Carimbo com Logo",
+   "desc": "Sua marca em cada brigadeiro.",
+   "preco": "",
+   "tag": "Mais pedido",
+   "img": "",
+   "fest": []
+  },
+  {
+   "id": "p7",
+   "cat": "carimbos",
+   "nome": "Carimbo Monograma",
+   "desc": "Iniciais para casamentos e aniversários.",
+   "preco": "",
+   "tag": "",
+   "img": "",
+   "fest": []
+  },
+  {
+   "id": "p8",
+   "cat": "carimbos",
+   "nome": "Carimbo Frase",
+   "desc": "“Feito com amor”, “Obrigado” e mais.",
+   "preco": "",
+   "tag": "",
+   "img": "",
+   "fest": []
+  },
+  {
+   "id": "p9",
+   "cat": "cortadores",
+   "nome": "Cortador Nuvem",
+   "desc": "Para biscoitos e pasta americana.",
+   "preco": "",
+   "tag": "",
+   "img": "",
+   "fest": []
+  },
+  {
+   "id": "p10",
+   "cat": "cortadores",
+   "nome": "Cortador Coração",
+   "desc": "Clássico que nunca sai de moda.",
+   "preco": "",
+   "tag": "",
+   "img": "",
+   "fest": []
+  },
+  {
+   "id": "p11",
+   "cat": "cortadores",
+   "nome": "Cortador Personalizado",
+   "desc": "Qualquer formato a partir da sua ideia.",
+   "preco": "",
+   "tag": "Personalizado",
+   "img": "",
+   "fest": []
+  },
+  {
+   "id": "p12",
+   "cat": "rolinhos",
+   "nome": "Rolinho Tricô",
+   "desc": "Textura de tricô para pasta americana.",
+   "preco": "",
+   "tag": "",
+   "img": "",
+   "fest": []
+  },
+  {
+   "id": "p13",
+   "cat": "rolinhos",
+   "nome": "Rolinho Poá",
+   "desc": "Bolinhas delicadas e charmosas.",
+   "preco": "",
+   "tag": "",
+   "img": "",
+   "fest": []
+  },
+  {
+   "id": "p14",
+   "cat": "rolinhos",
+   "nome": "Rolinho Floral",
+   "desc": "Florzinhas em relevo contínuo.",
+   "preco": "",
+   "tag": "",
+   "img": "",
+   "fest": []
+  }
+ ],
+ "festividades": [
+  "Natal",
+  "ABC",
+  "Halloween",
+  "Páscoa",
+  "Formatura",
+  "Casamento",
+  "Dia dos Professores",
+  "Dia dos Namorados",
+  "Batizado",
+  "Primeira Comunhão",
+  "Festa Junina",
+  "Réveillon",
+  "Dia das Crianças"
+ ]
+}
