@@ -153,8 +153,7 @@ footer{background:var(--choco);color:var(--bege);padding:46px 0 26px}
   .menu .btn{width:100%}
   .hamb{display:block}
   .hero{padding:34px 0 50px}
-  .hero::after{background:rgba(255,248,244,.8)}
-  .hero::before{background:rgba(255,248,244,.82)}
+  .hero::after{background:radial-gradient(ellipse at 50% 72%,rgba(255,248,244,.88) 0%,rgba(255,248,244,.6) 55%,rgba(255,248,244,.35) 100%)}
   .hero-grid{grid-template-columns:1fr;text-align:center}
   .hero-logo{order:-1}
   .hero-logo img{width:min(270px,70vw)}
