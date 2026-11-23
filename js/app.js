@@ -36,6 +36,7 @@ const IC = {
   esq:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
   dir:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>',
   foto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="3"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 5l1.5-2h5L16 5"/></svg>',
+  colar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg>',
   mais:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
 };
 
@@ -214,6 +215,7 @@ function lerImagem(file, max=800){
 
 /* --- Modal genérico --- */
 function abrirModal(html){
+  SLOTS = {}; slotAtivo = null;
   $('modalCorpo').innerHTML = html;
   $('modal').hidden = false;
   document.body.style.overflow='hidden';
@@ -226,18 +228,62 @@ function campoFoto(img, c, suf='', rotulo=''){
   return `<div class="f-slot">${rotulo?`<div class="f-rot">${rotulo}</div>`:''}<div class="f-foto" style="background:${c.cor}" id="fPrev${suf}">${img?`<img src="${img}" alt="">`:(suf==='2'?`<span class="f-vazio">${IC.foto}</span>`:(ILUS[c.ilus]||''))}</div>
     <div class="f-foto-btns">
       <label class="btn btn-rosa btn-p">${IC.foto}<span id="fLbl${suf}">${img?'Trocar':'Adicionar'}</span><input type="file" accept="image/*" id="fArq${suf}" hidden></label>
+      <button type="button" class="btn btn-claro btn-p" id="fColar${suf}" title="Colar uma imagem copiada">${IC.colar}<span>Colar</span></button>
       <button type="button" class="btn btn-claro btn-p" id="fTirar${suf}" ${img?'':'hidden'}>Remover</button>
     </div><p class="f-msg" id="fMsg${suf}"></p></div>`;
 }
+const DICA_COLAR = `<p class="f-dica">Dica: copie uma foto (no celular, segure a foto e toque em <b>Copiar</b>; no computador, botão direito → <b>Copiar imagem</b>) e toque em <b>Colar</b>. No computador também dá para apertar <b>Ctrl + V</b> ou arrastar a foto para o quadrinho.</p>`;
+
+/* --- Colar imagem: guarda quais quadrinhos de foto estão abertos no modal --- */
+let SLOTS = {};      // suf -> {aplicar, cheio}
+let slotAtivo = null;
+async function imagemDoClipboard(){
+  if(!navigator.clipboard || !navigator.clipboard.read) throw new Error('Este navegador não deixa colar pelo botão. Use Ctrl + V ou o botão Adicionar.');
+  let itens;
+  try{ itens = await navigator.clipboard.read(); }
+  catch(e){ throw new Error('O navegador não deixou colar. Permita o acesso à área de transferência ou use Ctrl + V.'); }
+  for(const it of itens){
+    const tipo = it.types.find(x=>x.startsWith('image/'));
+    if(tipo) return await it.getType(tipo);
+  }
+  throw new Error('Nenhuma imagem copiada. Copie uma foto e tente de novo.');
+}
+function imagemDoEvento(dt){
+  if(!dt) return null;
+  for(const it of dt.items||[]) if(it.kind==='file' && it.type.startsWith('image/')) return it.getAsFile();
+  for(const f of dt.files||[]) if(f.type.startsWith('image/')) return f;
+  return null;
+}
+document.addEventListener('paste', e=>{
+  if($('modal').hidden || !Object.keys(SLOTS).length) return;
+  const img = imagemDoEvento(e.clipboardData); if(!img) return;   // texto normal: cola no campo
+  e.preventDefault();
+  let alvo = (slotAtivo!==null && SLOTS[slotAtivo]) ? slotAtivo : null;
+  if(alvo===null){ const ordem = Object.keys(SLOTS).sort(); alvo = ordem.find(s=>!SLOTS[s].cheio()) ?? ordem[0]; }
+  SLOTS[alvo].aplicar(img);
+});
 function ligarFoto(estado, c, chave='img', suf=''){
   const vazio = ()=> suf==='2' ? `<span class="f-vazio">${IC.foto}</span>` : (ILUS[c().ilus]||'');
+  const aplicar = async f=>{
+    $('fMsg'+suf).textContent='Preparando imagem…';
+    try{ estado[chave] = await lerImagem(f); $('fPrev'+suf).innerHTML = `<img src="${estado[chave]}" alt="">`; $('fTirar'+suf).hidden=false; $('fLbl'+suf).textContent='Trocar'; $('fMsg'+suf).textContent='Foto colocada!'; setTimeout(()=>{ if($('fMsg'+suf)?.textContent==='Foto colocada!') $('fMsg'+suf).textContent=''; },1800); }
+    catch(err){ $('fMsg'+suf).textContent = err.message; }
+  };
+  SLOTS[suf] = {aplicar, cheio:()=>!!estado[chave]};
   $('fArq'+suf).onchange = async e=>{
     const f = e.target.files[0]; if(!f) return;
-    $('fMsg'+suf).textContent='Preparando imagem…';
-    try{ estado[chave] = await lerImagem(f); $('fPrev'+suf).innerHTML = `<img src="${estado[chave]}" alt="">`; $('fTirar'+suf).hidden=false; $('fLbl'+suf).textContent='Trocar'; $('fMsg'+suf).textContent=''; }
-    catch(err){ $('fMsg'+suf).textContent = err.message; }
-    e.target.value='';
+    await aplicar(f); e.target.value='';
   };
+  $('fColar'+suf).onclick = async ()=>{
+    try{ await aplicar(await imagemDoClipboard()); }
+    catch(err){ $('fMsg'+suf).textContent = err.message; }
+  };
+  const prev = $('fPrev'+suf);
+  prev.title = 'Clique aqui e aperte Ctrl + V para colar, ou arraste uma foto';
+  prev.onclick = ()=>{ slotAtivo = suf; document.querySelectorAll('.f-foto').forEach(x=>x.classList.toggle('ativo', x===prev)); };
+  prev.ondragover = e=>{ e.preventDefault(); prev.classList.add('ativo'); };
+  prev.ondragleave = ()=> prev.classList.remove('ativo');
+  prev.ondrop = e=>{ e.preventDefault(); prev.classList.remove('ativo'); const f = imagemDoEvento(e.dataTransfer); if(f) aplicar(f); else $('fMsg'+suf).textContent='Solte uma imagem aqui.'; };
   $('fTirar'+suf).onclick = ()=>{ estado[chave]=''; $('fPrev'+suf).innerHTML = vazio(); $('fTirar'+suf).hidden=true; $('fLbl'+suf).textContent='Adicionar'; };
 }
 
@@ -248,6 +294,7 @@ function abrirProduto(id){
     <h3>${orig?'Editar produto':'Novo produto'}</h3>
     <form id="fProd">
       <div class="f-duas">${campoFoto(est.img, cat(est.cat), '', 'Foto 1 (principal)')}${campoFoto(est.img2||'', cat(est.cat), '2', 'Foto 2 (opcional)')}</div>
+      ${DICA_COLAR}
       <label>Categoria<select id="fCat">${DADOS.categorias.map(c=>`<option value="${c.id}" ${c.id===est.cat?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></label>
       <label>Nome do produto<input id="fNome" required maxlength="80" value="${esc(est.nome)}" placeholder="Ex.: Ejetor Coração"></label>
       <label>Descrição curta<textarea id="fDesc" maxlength="400" rows="4" placeholder="Ex.: Ideal para brigadeiros de 15g a 22g">${esc(est.desc)}</textarea></label>
@@ -281,6 +328,7 @@ function abrirCategoria(id){
   const c = cat(id), est = {img:c.img||''};
   abrirModal(`<h3>Editar categoria</h3><form id="fCatF">
     ${campoFoto(est.img, c)}
+    ${DICA_COLAR}
     <label>Nome<input id="cNome" required maxlength="40" value="${esc(c.nome)}"></label>
     <label>Descrição<textarea id="cDesc" maxlength="140" rows="2">${esc(c.desc)}</textarea></label>
     <div class="f-acoes"><button type="button" class="btn btn-claro" data-fechar>Cancelar</button><button class="btn btn-rosa">Salvar</button></div></form>`);
