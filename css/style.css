@@ -217,6 +217,9 @@ body.editando .pontos{left:16px;transform:none}
 .f-slot{display:flex;flex-direction:column;gap:8px;align-items:center}
 .f-rot{font-weight:800;font-size:.85rem}
 .f-duas .f-foto{width:100%;max-width:170px}
+.f-foto{cursor:pointer;outline:3px solid transparent;outline-offset:2px;transition:outline-color .15s}
+.f-foto.ativo{outline-color:var(--rosa)}
+.f-dica{font-size:.8rem;color:var(--choco-sua);background:var(--menta-claro);border-radius:12px;padding:8px 12px;line-height:1.45}
 .f-vazio{color:var(--choco-sua);opacity:.5}
 .f-vazio svg{width:48px;height:48px}
 
