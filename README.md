@@ -40,19 +40,33 @@ Não há chaves de API, banco de dados nem senhas.
 
 Depois disso, **toda vez que um arquivo mudar no GitHub, a Vercel atualiza o site sozinha.**
 
-## Editar o catálogo (sem precisar de programador)
+## Editar o catálogo
 
-1. Abra o seu site com `#editar` no fim do endereço:
-   `https://confeita-lab-3d.vercel.app/#editar`
-2. Clique em **Editar catálogo**. Você pode adicionar, editar, reordenar ou excluir produtos, colocar até 2 fotos, marcar festividades, editar categorias e mudar WhatsApp e Instagram (botão **Contatos**).
-3. Clique em **Baixar dados.json**.
-4. No GitHub, abra a pasta **data**, clique em **Add file → Upload files**, envie o `dados.json` baixado (ele substitui o antigo) e clique em **Commit changes**.
-5. Em cerca de 1 minuto o site está atualizado.
+1. Abra o site com `#editar` no fim do endereço: `https://confeitalab3d.vercel.app/#editar`
+2. Clique em **Editar catálogo**. Dá para:
+   - **Adicionar vários**: escolha, cole (Ctrl + V) ou arraste várias fotos de uma vez, preencha categoria, preço e festividade uma vez só e digite só o nome de cada produto. Marque "Cada produto tem 2 fotos" para juntar as fotos de 2 em 2.
+   - **Mudar nome e preço direto no cartão** do produto.
+   - **Preço em lote**: muda o preço de todos, de uma categoria ou de uma festividade.
+   - Lápis do produto: editar tudo, colar foto (botão **Colar**), trocar a ordem e excluir.
+3. Clique em **Publicar no site** e digite a senha de edição. Em cerca de 1 minuto o site atualiza para todo mundo.
 
-Observações:
-- Quem visita o site normalmente não vê o botão de edição. Mesmo que alguém abra com `#editar`, só baixa um arquivo no próprio computador. Só quem tem acesso ao seu GitHub consegue publicar.
-- O botão **Abrir dados.json** retoma uma edição a partir de um arquivo que você já baixou.
-- As fotos novas ficam guardadas dentro do `dados.json`. Com muitas fotos novas o arquivo cresce. Quando quiser, peça ao Claude para "separar as fotos do dados.json em arquivos", e o site fica mais leve.
+Se o botão aparecer como **Baixar dados.json**, a publicação direta ainda não foi configurada (veja abaixo). Nesse caso, baixe o arquivo e envie para a pasta `data` do GitHub.
+
+## Configurar o botão "Publicar no site" (uma vez só)
+
+O botão usa a função `api/publicar.js`, que grava o catálogo no GitHub. A Vercel atualiza o site sozinha.
+
+1. **Criar o token no GitHub:** Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate new token.
+   - Repository access: **Only select repositories** → `confeitalabsite`
+   - Permissions → Repository permissions → **Contents: Read and write**
+   - Copie o token gerado.
+2. **Na Vercel:** projeto → Settings → **Environment Variables**. Adicione:
+   - `GITHUB_TOKEN` = o token copiado
+   - `GITHUB_REPO` = `vitoriasoy09-hub/confeitalabsite`
+   - `SENHA_EDICAO` = uma senha só sua, para publicar
+3. **Vercel → Deployments** → no último deploy, clique em ⋯ → **Redeploy**.
+
+Segurança: o token fica guardado só na Vercel e nunca aparece no site. Sem a senha, ninguém consegue publicar.
 
 ## Pedir alterações ao Claude no futuro
 

@@ -267,3 +267,36 @@ body.editando .zap{bottom:96px}
 .f-msg{text-align:center;font-size:.85rem;color:var(--rosa-esc);min-height:1em}
 .f-acoes{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
 @media (max-width:760px){.barra-in{justify-content:center;text-align:center}.f-linha{grid-template-columns:1fr}.ed-btn{width:32px;height:32px}}
+
+/* ===== atualização rápida ===== */
+.prod.novo{display:flex;flex-direction:column;gap:10px;padding:14px;cursor:default}
+.novo-btn{flex:1;width:100%;border:0;border-radius:16px;background:#fff;color:var(--rosa-esc);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:'Nunito';padding:16px;transition:transform .15s,background .15s}
+.novo-btn:hover{transform:translateY(-2px);background:var(--rosa);color:#fff}
+.novo-btn svg{width:40px;height:40px}
+.novo-btn b{font-size:1.05rem}
+.novo-btn span{font-size:.82rem;font-weight:600;opacity:.8}
+.novo-btn.sec{flex:.55;background:rgba(255,255,255,.6)}
+.novo-btn.sec svg{width:28px;height:28px}
+.ed-in{font:inherit;width:100%;border:2px dashed var(--bege);border-radius:10px;padding:6px 10px;background:#fff;color:var(--choco)}
+.ed-in:focus{outline:none;border-style:solid;border-color:var(--rosa)}
+.ed-nome{font-family:'Fraunces',serif;font-weight:700;font-size:1.05rem;margin-bottom:6px}
+.ed-preco-l{display:flex;align-items:center;gap:8px;font-weight:800;font-size:.85rem;margin-bottom:12px}
+.ed-preco{font-weight:800}
+.lote-drop{border:2.5px dashed var(--rosa);background:var(--rosa-claro);border-radius:18px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;color:var(--rosa-esc)}
+.lote-drop.ativo{background:#fff}
+.lote-drop>svg{width:40px;height:40px}
+.lote-drop span{font-size:.85rem;color:var(--choco-sua);font-weight:600}
+.lote-drop .f-foto-btns{margin-top:6px}
+.lote-pares{flex-direction:row!important;align-items:center;gap:8px!important;font-weight:700!important}
+.lote-pares input{width:auto!important;accent-color:var(--rosa-esc)}
+.lote-lista{display:flex;flex-direction:column;gap:8px;max-height:44vh;overflow:auto}
+.lote-lista:empty{display:none}
+.lote-item{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--bege);border-radius:14px;padding:8px}
+.lote-fotos{display:flex;gap:4px;flex:none}
+.lote-fotos img{width:56px;height:56px;object-fit:cover;border-radius:10px}
+.lote-nome{flex:1;min-width:0}
+.lote-nome.erro{border-color:var(--rosa)!important;background:var(--rosa-claro)!important}
+.lote-item .ed-btn{flex:none;box-shadow:none;border:1.5px solid var(--bege)}
+.lote-comum{display:flex;flex-direction:column;gap:12px;border-top:2px dashed var(--bege);padding-top:14px}
+
+[hidden]{display:none!important}

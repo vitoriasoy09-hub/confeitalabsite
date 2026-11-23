@@ -3,6 +3,9 @@
 let DADOS = null;
 let SALVO = '';
 let modoArquivo = false; // true = edição fora do Claude (baixa o dados.json)
+let modoServidor = false; // true = botão "Publicar no site" (api/publicar na Vercel)
+const PREVIEW = {};       // fotos recém-publicadas: caminho -> imagem, até a Vercel terminar de atualizar
+const srcImg = u => PREVIEW[u] || u;
 let filtroAtual = 'todos';
 let festAtual = '';
 const DESC_PADRAO = 'Mais definição e qualidade nas suas produções🧁💖\nDimensão do produto aprox. 3,5x3,5x3cm📏\nConsultar disponibilidade de cor.';
@@ -37,6 +40,7 @@ const IC = {
   dir:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>',
   foto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="3"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 5l1.5-2h5L16 5"/></svg>',
   colar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg>',
+  fotos:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="14" height="14" rx="2"/><path d="M3 15V5a2 2 0 0 1 2-2h10"/><circle cx="12" cy="12" r="1.6"/><path d="M21 17l-4-4-6 6"/></svg>',
   mais:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
 };
 
@@ -45,7 +49,7 @@ const $ = id => document.getElementById(id);
 const cat = id => DADOS.categorias.find(c=>c.id===id) || DADOS.categorias[0] || {};
 const zapLink = msg => `https://wa.me/${DADOS.config.whatsapp}?text=${encodeURIComponent(msg)}`;
 const novoId = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-const imgOuIlus = (img, c, cls='') => img ? `<img class="${cls}" src="${img}" alt="" loading="lazy">` : (ILUS[c.ilus]||'');
+const imgOuIlus = (img, c, cls='') => img ? `<img class="${cls}" src="${srcImg(img)}" alt="" loading="lazy">` : (ILUS[c.ilus]||'');
 
 /* ===== Render ===== */
 function renderTudo(){
@@ -100,12 +104,15 @@ function renderGrade(){
   $('festAtiva').hidden = !festAtual;
   if(festAtual) $('festAtiva').innerHTML = `Festividade: <span>${esc(festAtual)}<button type="button" id="festLimpar" aria-label="Limpar">×</button></span>`;
   if(festAtual) $('festLimpar').onclick = ()=>filtrar('todos');
-  let html = editando ? `<button class="prod novo" data-acao="novo">${IC.mais}<span>Adicionar produto</span></button>` : '';
+  let html = editando ? `<div class="prod novo">
+      <button class="novo-btn" data-acao="lote">${IC.fotos}<b>Adicionar vários</b><span>várias fotos de uma vez</span></button>
+      <button class="novo-btn sec" data-acao="novo">${IC.mais}<b>Adicionar 1 produto</b></button>
+    </div>` : '';
   html += lista.map(p=>{
     const c = cat(p.cat);
     return `<div class="prod">
       <div class="foto ${p.img?'com-foto':''} ${p.img&&p.img2?'duas':''}" style="background:${c.cor}">
-        ${p.tag?`<span class="tag">${esc(p.tag)}</span>`:''}${imgOuIlus(p.img,c)}${p.img&&p.img2?`<img class="img2" src="${p.img2}" alt="" loading="lazy"><span class="pontos" data-troca><i></i><i></i></span>`:''}
+        ${p.tag?`<span class="tag">${esc(p.tag)}</span>`:''}${imgOuIlus(p.img,c)}${p.img&&p.img2?`<img class="img2" src="${srcImg(p.img2)}" alt="" loading="lazy"><span class="pontos" data-troca><i></i><i></i></span>`:''}
         <div class="ed-tools">
           <button class="ed-btn" data-acao="mover" data-dir="-1" data-id="${p.id}" title="Mover para trás">${IC.esq}</button>
           <button class="ed-btn" data-acao="mover" data-dir="1" data-id="${p.id}" title="Mover para frente">${IC.dir}</button>
@@ -114,8 +121,11 @@ function renderGrade(){
         </div>
       </div>
       <div class="info">
-        <h3>${esc(p.nome)}</h3><p>${esc(p.desc)}</p>
-        <div class="preco">${p.preco?esc(p.preco):'<small>Sob consulta</small>'}</div>
+        ${editando
+          ? `<input class="ed-in ed-nome" data-campo="nome" data-id="${p.id}" value="${esc(p.nome)}" aria-label="Nome do produto"><p>${esc(p.desc)}</p>
+             <label class="ed-preco-l">Preço <input class="ed-in ed-preco" data-campo="preco" data-id="${p.id}" value="${esc(p.preco)}" placeholder="Sob consulta" aria-label="Preço"></label>`
+          : `<h3>${esc(p.nome)}</h3><p>${esc(p.desc)}</p>
+        <div class="preco">${p.preco?esc(p.preco):'<small>Sob consulta</small>'}</div>`}
         <a class="btn btn-rosa" target="_blank" rel="noopener" href="${zapLink(`Olá! Vi no site e quero o *${p.nome}*`)}">Pedir no WhatsApp</a>
       </div>
     </div>`;}).join('');
@@ -158,12 +168,24 @@ function alternarEdicao(on){
   renderGrade();
   if(on) $('catalogo').scrollIntoView({behavior:'smooth'});
 }
+document.addEventListener('input', ev=>{
+  const el = ev.target.closest('.ed-in'); if(!el) return;
+  const p = DADOS.produtos.find(x=>x.id===el.dataset.id); if(!p) return;
+  p[el.dataset.campo] = el.value.trim() ? el.value : '';
+  marcarPendente();
+});
+document.addEventListener('change', ev=>{
+  const el = ev.target.closest('.ed-in'); if(!el) return;
+  const p = DADOS.produtos.find(x=>x.id===el.dataset.id); if(p) p[el.dataset.campo] = el.value.trim();
+  marcarPendente();
+});
 function pendente(){ return JSON.stringify(DADOS)!==SALVO; }
 function marcarPendente(){
   const p = pendente();
-  $('edStatus').textContent = p ? (modoArquivo?'Alterações ainda não baixadas':'Alterações ainda não publicadas') : (modoArquivo?'Sem alterações novas':'Tudo publicado');
+  const baixar = modoArquivo && !modoServidor;
+  $('edStatus').textContent = p ? (baixar?'Alterações ainda não baixadas':'Alterações ainda não publicadas') : (baixar?'Sem alterações novas':'Tudo publicado');
   $('edStatus').classList.toggle('pend',p);
-  $('btnPublicar').disabled = modoArquivo ? false : !p;
+  $('btnPublicar').disabled = (modoArquivo && !modoServidor) ? false : !p;
   $('btnDescartar').disabled = !p;
 }
 
@@ -174,6 +196,7 @@ document.addEventListener('click', ev=>{
   ev.preventDefault(); ev.stopPropagation();
   const id = b.dataset.id, a = b.dataset.acao;
   if(a==='novo') abrirProduto(null);
+  if(a==='lote') abrirLote();
   if(a==='editar') abrirProduto(id);
   if(a==='excluir') confirmarExcluir(id);
   if(a==='editCat') abrirCategoria(id);
@@ -215,17 +238,18 @@ function lerImagem(file, max=800){
 
 /* --- Modal genérico --- */
 function abrirModal(html){
-  SLOTS = {}; slotAtivo = null;
+  SLOTS = {}; slotAtivo = null; LOTE_ADD = null;
+  if(senhaPendente){ const s = senhaPendente; senhaPendente = null; s(null); }
   $('modalCorpo').innerHTML = html;
   $('modal').hidden = false;
   document.body.style.overflow='hidden';
 }
-function fecharModal(){ $('modal').hidden = true; document.body.style.overflow=''; }
+function fecharModal(){ $('modal').hidden = true; document.body.style.overflow=''; LOTE_ADD = null; if(senhaPendente){ const s = senhaPendente; senhaPendente = null; s(null); } }
 $('modal').addEventListener('click',e=>{ if(e.target.id==='modal' || e.target.closest('[data-fechar]')) fecharModal(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !$('modal').hidden) fecharModal(); });
 
 function campoFoto(img, c, suf='', rotulo=''){
-  return `<div class="f-slot">${rotulo?`<div class="f-rot">${rotulo}</div>`:''}<div class="f-foto" style="background:${c.cor}" id="fPrev${suf}">${img?`<img src="${img}" alt="">`:(suf==='2'?`<span class="f-vazio">${IC.foto}</span>`:(ILUS[c.ilus]||''))}</div>
+  return `<div class="f-slot">${rotulo?`<div class="f-rot">${rotulo}</div>`:''}<div class="f-foto" style="background:${c.cor}" id="fPrev${suf}">${img?`<img src="${srcImg(img)}" alt="">`:(suf==='2'?`<span class="f-vazio">${IC.foto}</span>`:(ILUS[c.ilus]||''))}</div>
     <div class="f-foto-btns">
       <label class="btn btn-rosa btn-p">${IC.foto}<span id="fLbl${suf}">${img?'Trocar':'Adicionar'}</span><input type="file" accept="image/*" id="fArq${suf}" hidden></label>
       <button type="button" class="btn btn-claro btn-p" id="fColar${suf}" title="Colar uma imagem copiada">${IC.colar}<span>Colar</span></button>
@@ -236,6 +260,7 @@ const DICA_COLAR = `<p class="f-dica">Dica: copie uma foto (no celular, segure a
 
 /* --- Colar imagem: guarda quais quadrinhos de foto estão abertos no modal --- */
 let SLOTS = {};      // suf -> {aplicar, cheio}
+let LOTE_ADD = null; // recebe fotos coladas na janela "Adicionar vários"
 let slotAtivo = null;
 async function imagemDoClipboard(){
   if(!navigator.clipboard || !navigator.clipboard.read) throw new Error('Este navegador não deixa colar pelo botão. Use Ctrl + V ou o botão Adicionar.');
@@ -248,6 +273,23 @@ async function imagemDoClipboard(){
   }
   throw new Error('Nenhuma imagem copiada. Copie uma foto e tente de novo.');
 }
+function imagensDoEvento(dt){
+  const lista = [];
+  if(!dt) return lista;
+  for(const it of dt.items||[]) if(it.kind==='file' && it.type.startsWith('image/')){ const f = it.getAsFile(); if(f) lista.push(f); }
+  if(!lista.length) for(const f of dt.files||[]) if(f.type.startsWith('image/')) lista.push(f);
+  return lista;
+}
+async function imagensDoClipboard(){
+  if(!navigator.clipboard || !navigator.clipboard.read) throw new Error('Este navegador não deixa colar pelo botão. Use Ctrl + V ou "Escolher fotos".');
+  let itens;
+  try{ itens = await navigator.clipboard.read(); }
+  catch(e){ throw new Error('O navegador não deixou colar. Permita o acesso à área de transferência ou use Ctrl + V.'); }
+  const lista = [];
+  for(const it of itens){ const tipo = it.types.find(x=>x.startsWith('image/')); if(tipo) lista.push(await it.getType(tipo)); }
+  if(!lista.length) throw new Error('Nenhuma imagem copiada. Copie uma foto e tente de novo.');
+  return lista;
+}
 function imagemDoEvento(dt){
   if(!dt) return null;
   for(const it of dt.items||[]) if(it.kind==='file' && it.type.startsWith('image/')) return it.getAsFile();
@@ -255,7 +297,9 @@ function imagemDoEvento(dt){
   return null;
 }
 document.addEventListener('paste', e=>{
-  if($('modal').hidden || !Object.keys(SLOTS).length) return;
+  if($('modal').hidden) return;
+  if(LOTE_ADD){ const imgs = imagensDoEvento(e.clipboardData); if(imgs.length){ e.preventDefault(); LOTE_ADD(imgs); } return; }
+  if(!Object.keys(SLOTS).length) return;
   const img = imagemDoEvento(e.clipboardData); if(!img) return;   // texto normal: cola no campo
   e.preventDefault();
   let alvo = (slotAtivo!==null && SLOTS[slotAtivo]) ? slotAtivo : null;
@@ -382,6 +426,7 @@ function abrirArquivoDados(){
   inp.click();
 }
 async function publicar(){
+  if(modoServidor) return publicarServidor();
   if(modoArquivo) return baixarDados();
   const btn = $('btnPublicar'); btn.disabled = true; $('edStatus').textContent='Publicando…';
   try{
@@ -408,6 +453,192 @@ $('btnPublicar').onclick = publicar;
 $('btnDescartar').onclick = ()=>{ DADOS = JSON.parse(SALVO); renderTudo(); };
 window.addEventListener('beforeunload',e=>{ if(editando && pendente()){ e.preventDefault(); e.returnValue=''; } });
 
+
+/* ===================== Adicionar vários produtos de uma vez ===================== */
+function nomeDoArquivo(f){
+  const n = (f && f.name || '').replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim();
+  if(!n || /^(img|image|imagem|whatsapp|screenshot|captura|foto|photo|dsc|pxl|pasted|blob|download)/i.test(n) || /\d{4,}|[0-9a-f]{6,}/i.test(n) || !/[a-zà-ú]{3,}/i.test(n)) return '';
+  return n.charAt(0).toUpperCase() + n.slice(1);
+}
+function abrirLote(){
+  const itens = [];   // {img, nome}
+  const catIni = filtroAtual!=='todos' ? filtroAtual : DADOS.categorias[0].id;
+  abrirModal(`
+    <h3>Adicionar vários produtos</h3>
+    <form id="fLote">
+      <div class="lote-drop" id="loteDrop">
+        ${IC.fotos}<b>Coloque as fotos aqui</b>
+        <span>Escolha várias fotos de uma vez, cole (Ctrl + V) ou arraste para cá.</span>
+        <div class="f-foto-btns">
+          <label class="btn btn-rosa btn-p">${IC.foto}<span>Escolher fotos</span><input type="file" accept="image/*" multiple id="loteArq" hidden></label>
+          <button type="button" class="btn btn-claro btn-p" id="loteColar">${IC.colar}<span>Colar</span></button>
+        </div>
+      </div>
+      <p class="f-msg" id="loteMsg"></p>
+      <label class="lote-pares"><input type="checkbox" id="lotePares"> Cada produto tem 2 fotos <small>(junta as fotos de 2 em 2, na ordem)</small></label>
+      <div class="lote-lista" id="loteLista"></div>
+      <div class="lote-comum">
+        <div class="f-grupo">Isto vale para todos os produtos novos:</div>
+        <label>Categoria<select id="lCat">${DADOS.categorias.map(c=>`<option value="${c.id}" ${c.id===catIni?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></label>
+        <div class="f-linha">
+          <label>Preço <small>(vazio = Sob consulta)</small><input id="lPreco" maxlength="30" placeholder="Ex.: 14,00"></label>
+          <label>Etiqueta <small>(opcional)</small><input id="lTag" maxlength="24" placeholder="Ex.: Novidade"></label>
+        </div>
+        <div class="f-grupo">Festividades <small style="font-weight:600;color:var(--choco-sua)">(opcional)</small></div>
+        <div class="f-fests">${DADOS.festividades.map(f=>`<label><input type="checkbox" name="lFest" value="${esc(f)}" ${f===festAtual?'checked':''}>${esc(f)}</label>`).join('')}</div>
+        <label>Descrição<textarea id="lDesc" maxlength="400" rows="3">${esc(DESC_PADRAO)}</textarea></label>
+      </div>
+      <div class="f-acoes"><button type="button" class="btn btn-claro" data-fechar>Cancelar</button><button class="btn btn-rosa" id="loteOk" disabled>Adicionar produtos</button></div>
+    </form>`);
+
+  const grupos = ()=>{ const passo = $('lotePares').checked ? 2 : 1; const g=[]; for(let i=0;i<itens.length;i+=passo) g.push(itens.slice(i,i+passo)); return g; };
+  const desenhar = ()=>{
+    const g = grupos();
+    $('loteLista').innerHTML = g.map((grupo,gi)=>`
+      <div class="lote-item">
+        <div class="lote-fotos">${grupo.map(it=>`<img src="${it.img}" alt="">`).join('')}</div>
+        <input class="lote-nome" data-g="${gi}" maxlength="80" placeholder="Nome do produto ${gi+1}" value="${esc(grupo[0].nome)}">
+        <button type="button" class="ed-btn perigo" data-tirar="${gi}" title="Tirar">${IC.lixo}</button>
+      </div>`).join('');
+    $('loteOk').disabled = !g.length;
+    $('loteOk').textContent = g.length ? `Adicionar ${g.length} produto${g.length>1?'s':''}` : 'Adicionar produtos';
+    $('loteLista').querySelectorAll('.lote-nome').forEach(inp=>inp.oninput=()=>{ grupos()[inp.dataset.g][0].nome = inp.value; inp.classList.remove('erro'); });
+    $('loteLista').querySelectorAll('[data-tirar]').forEach(b=>b.onclick=()=>{
+      const g2 = grupos()[b.dataset.tirar]; g2.forEach(it=>itens.splice(itens.indexOf(it),1)); desenhar();
+    });
+  };
+  const adicionar = async arquivos=>{
+    const lista = [...arquivos];
+    let feitos = 0;
+    for(const f of lista){
+      $('loteMsg').textContent = `Preparando foto ${++feitos} de ${lista.length}…`;
+      try{ itens.push({img: await lerImagem(f), nome: nomeDoArquivo(f)}); }
+      catch(e){ /* ignora arquivo que não é imagem */ }
+    }
+    $('loteMsg').textContent = itens.length ? `${itens.length} foto${itens.length>1?'s':''} pronta${itens.length>1?'s':''}. Agora é só digitar os nomes.` : '';
+    desenhar();
+    const vazio = $('loteLista').querySelector('.lote-nome:placeholder-shown'); if(vazio) vazio.focus();
+  };
+  LOTE_ADD = adicionar;
+  $('loteArq').onchange = async e=>{ await adicionar(e.target.files); e.target.value=''; };
+  $('loteColar').onclick = async ()=>{ try{ await adicionar(await imagensDoClipboard()); }catch(err){ $('loteMsg').textContent = err.message; } };
+  $('lotePares').onchange = desenhar;
+  const drop = $('loteDrop');
+  drop.ondragover = e=>{ e.preventDefault(); drop.classList.add('ativo'); };
+  drop.ondragleave = ()=> drop.classList.remove('ativo');
+  drop.ondrop = e=>{ e.preventDefault(); drop.classList.remove('ativo'); const fs = imagensDoEvento(e.dataTransfer); if(fs.length) adicionar(fs); };
+
+  $('fLote').onsubmit = e=>{
+    e.preventDefault();
+    const g = grupos(); if(!g.length) return;
+    const faltando = [...$('loteLista').querySelectorAll('.lote-nome')].filter(i=>!i.value.trim());
+    if(faltando.length){ faltando.forEach(i=>i.classList.add('erro')); faltando[0].focus(); $('loteMsg').textContent = 'Falta o nome de alguns produtos (marcados em rosa).'; return; }
+    const comum = {cat:$('lCat').value, preco:$('lPreco').value.trim(), tag:$('lTag').value.trim(), desc:$('lDesc').value.trim(),
+      fest:[...document.querySelectorAll('input[name=lFest]:checked')].map(x=>x.value)};
+    const novos = g.map(grupo=>({id:novoId(), nome:grupo[0].nome.trim(), img:grupo[0].img, img2:grupo[1]?grupo[1].img:'', ...comum, fest:[...comum.fest]}));
+    DADOS.produtos.unshift(...novos);
+    fecharModal(); renderFests(); renderGrade(); marcarPendente();
+    $('edStatus').textContent = `${novos.length} produto${novos.length>1?'s':''} adicionado${novos.length>1?'s':''}! Não esqueça de publicar.`;
+  };
+}
+
+/* ===================== Preço em lote ===================== */
+function abrirPrecoLote(){
+  abrirModal(`<h3>Preço em lote</h3><form id="fPL">
+    <label>Mudar o preço de<select id="plAlvo">
+      <option value="todos">Todos os produtos</option>
+      <optgroup label="Categoria">${DADOS.categorias.map(c=>`<option value="c:${c.id}">${esc(c.nome)}</option>`).join('')}</optgroup>
+      ${DADOS.festividades.length?`<optgroup label="Festividade">${DADOS.festividades.map(f=>`<option value="f:${esc(f)}">${esc(f)}</option>`).join('')}</optgroup>`:''}
+    </select></label>
+    <label>Novo preço <small>(vazio = Sob consulta)</small><input id="plPreco" maxlength="30" placeholder="Ex.: 14,00"></label>
+    <p class="f-msg" id="plMsg"></p>
+    <div class="f-acoes"><button type="button" class="btn btn-claro" data-fechar>Cancelar</button><button class="btn btn-rosa">Aplicar</button></div></form>`);
+  const alvo = ()=>{ const v=$('plAlvo').value; return DADOS.produtos.filter(p=> v==='todos' || (v.startsWith('c:') && p.cat===v.slice(2)) || (v.startsWith('f:') && p.fest.includes(v.slice(2)))); };
+  const contar = ()=>{ const n = alvo().length; $('plMsg').textContent = `Vai mudar o preço de ${n} produto${n!==1?'s':''}.`; };
+  $('plAlvo').onchange = contar; contar();
+  $('fPL').onsubmit = e=>{
+    e.preventDefault();
+    const preco = $('plPreco').value.trim(), lista = alvo();
+    lista.forEach(p=>p.preco = preco);
+    fecharModal(); renderGrade(); marcarPendente();
+    $('edStatus').textContent = `Preço de ${lista.length} produto${lista.length!==1?'s':''} alterado. Não esqueça de publicar.`;
+  };
+}
+
+/* ===================== Publicar direto no site (Vercel + GitHub) ===================== */
+let senhaPendente = null;
+async function servidorConfigurado(){
+  try{ const r = await fetch('api/publicar', {cache:'no-store'}); if(!r.ok) return false; return !!(await r.json()).configurado; }
+  catch(e){ return false; }
+}
+function lerSenhaGuardada(){ try{ return localStorage.getItem('confeita_senha') || sessionStorage.getItem('confeita_senha') || ''; }catch(e){ return ''; } }
+function guardarSenha(s, lembrar){ try{ (lembrar?localStorage:sessionStorage).setItem('confeita_senha', s); }catch(e){} }
+function esquecerSenha(){ try{ localStorage.removeItem('confeita_senha'); sessionStorage.removeItem('confeita_senha'); }catch(e){} }
+function pedirSenha(msg=''){
+  return new Promise(resolve=>{
+    abrirModal(`<h3>Senha de edição</h3><form id="fSenha">
+      <p class="m-txt">Digite a senha que você criou na Vercel para publicar.</p>
+      <label>Senha<input id="sSenha" type="password" autocomplete="current-password" required></label>
+      <label class="lote-pares"><input type="checkbox" id="sLembrar" checked> Lembrar neste aparelho</label>
+      <p class="f-msg" id="sMsg">${esc(msg)}</p>
+      <div class="f-acoes"><button type="button" class="btn btn-claro" data-fechar>Cancelar</button><button class="btn btn-rosa">Publicar</button></div></form>`);
+    senhaPendente = resolve;
+    setTimeout(()=>$('sSenha')?.focus(), 50);
+    $('fSenha').onsubmit = e=>{
+      e.preventDefault();
+      const s = $('sSenha').value; const lembrar = $('sLembrar').checked;
+      senhaPendente = null; fecharModal(); guardarSenha(s, lembrar); resolve(s);
+    };
+  });
+}
+function extDe(url){ const m = /^data:image\/(\w+)/.exec(url); return m ? ({jpeg:'jpg'}[m[1]]||m[1]) : 'webp'; }
+async function publicarServidor(){
+  const btn = $('btnPublicar');
+  const status = (t, pend=true)=>{ $('edStatus').textContent = t; $('edStatus').classList.toggle('pend', pend); };
+  let senha = lerSenhaGuardada() || await pedirSenha();
+  if(!senha) return;
+  btn.disabled = true;
+  const api = async corpo=>{
+    const r = await fetch('api/publicar', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({senha, ...corpo})});
+    const j = await r.json().catch(()=>({}));
+    if(!r.ok){ const e = new Error(j.erro || 'Não foi possível publicar.'); e.status = r.status; throw e; }
+    return j;
+  };
+  try{
+    status('Conferindo a senha…');
+    await api({acao:'verificar'});
+    const copia = JSON.parse(JSON.stringify(DADOS));
+    const marca = Date.now().toString(36);
+    const pend = [];
+    copia.produtos.forEach(p=>['img','img2'].forEach((k,i)=>{ if((p[k]||'').startsWith('data:')) pend.push({obj:p, k, url:p[k], path:`img/produtos/${p.id}-${i+1}-${marca}.${extDe(p[k])}`}); }));
+    copia.categorias.forEach(c=>{ if((c.img||'').startsWith('data:')) pend.push({obj:c, k:'img', url:c.img, path:`img/produtos/categoria-${c.id}-${marca}.${extDe(c.img)}`}); });
+    const fotos = [], feitos = new Map();
+    for(let i=0;i<pend.length;i++){
+      const it = pend[i];
+      if(!feitos.has(it.url)){
+        status(`Enviando fotos: ${i+1} de ${pend.length}…`);
+        const {sha} = await api({acao:'foto', conteudo: it.url.split(',')[1]});
+        fotos.push({path: it.path, sha}); feitos.set(it.url, it.path);
+      }
+      it.obj[it.k] = feitos.get(it.url); PREVIEW[feitos.get(it.url)] = it.url;
+    }
+    status('Salvando o catálogo…');
+    await api({acao:'salvar', dados: JSON.stringify(copia), fotos});
+    // no aparelho, troca as fotos recém-enviadas pelos caminhos novos
+    const troca = u => feitos.get(u) || u;
+    DADOS.produtos.forEach(p=>{ p.img = troca(p.img); p.img2 = troca(p.img2); });
+    DADOS.categorias.forEach(c=>{ c.img = troca(c.img); });
+    SALVO = JSON.stringify(copia);
+    marcarPendente();
+    status('Publicado! O site atualiza para todo mundo em cerca de 1 minuto.', false);
+  }catch(e){
+    if(e.status === 401){ esquecerSenha(); status('Senha incorreta. Clique em "Publicar no site" e tente de novo.'); }
+    else status(e.message);
+  }finally{
+    btn.disabled = !pendente();
+  }
+}
+
 /* ===== Edição fora do Claude: abra o site com #editar no fim do endereço ===== */
 function ativarModoArquivo(){
   if(artifactApi || modoArquivo) return;
@@ -416,9 +647,17 @@ function ativarModoArquivo(){
   $('btnAbrirDados').hidden = false;
   $('btnEditar').hidden = editando;
   marcarPendente();
+  servidorConfigurado().then(ok=>{
+    if(!ok) return;
+    modoServidor = true;
+    $('btnPublicar').textContent = 'Publicar no site';
+    $('btnAbrirDados').hidden = true;
+    marcarPendente();
+  });
 }
 function checarHashEdicao(){ if(location.hash === '#editar') ativarModoArquivo(); }
 $('btnAbrirDados').onclick = abrirArquivoDados;
+$('btnPrecoLote').onclick = abrirPrecoLote;
 
 /* ===== Início ===== */
 $('ano').textContent = new Date().getFullYear();
